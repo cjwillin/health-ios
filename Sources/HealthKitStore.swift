@@ -74,7 +74,7 @@ final class HealthKitStore: ObservableObject {
         let stepType = HKQuantityType(.stepCount)
 
         healthStore.enableBackgroundDelivery(for: stepType, frequency: .immediate) { [weak self] success, error in
-            Task { @MainActor [weak self] in
+            DispatchQueue.main.async {
                 guard let self else { return }
                 if success {
                     self.backgroundDeliveryStatus = "enabled (stepCount, .immediate)"
