@@ -86,9 +86,9 @@ final class HealthKitStore: ObservableObject {
             }
         }
 
-        let query = HKObserverQuery(sampleType: stepType, predicate: nil) { [weak self] completion in
-            // Private HealthKit queue. Must call `completion` when done.
-            guard let self else { completion(); return }
+        let query = HKObserverQuery(sampleType: stepType, predicate: nil) { [weak self] _, completionHandler, _ in
+            // Private HealthKit queue. Must call `completionHandler` when done.
+            guard let self else { completionHandler(); return }
             DispatchQueue.main.async {
                 let initial = !self.sawInitialObserverCall
                 self.sawInitialObserverCall = true
@@ -111,7 +111,7 @@ final class HealthKitStore: ObservableObject {
                     if bgTask != .invalid {
                         UIApplication.shared.endBackgroundTask(bgTask)
                     }
-                    completion()
+                    completionHandler()
                 }
             }
         }
