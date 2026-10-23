@@ -1,0 +1,55 @@
+name: build-ipa
+
+# Builds an UNSIGNED .ipa of Health Sync on every push to main and attaches it
+# to the rolling 'latest' release. The workflow token has contents:write (below),
+# so release assets work without any extra secrets or permissions changes.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project (XcodeGen)
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build unsigned .ipa
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project HealthSync.xcodeproj \
+            -scheme HealthSync \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/HealthSync.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          mkdir -p Payload
+          cp -R "build/HealthSync.xcarchive/Products/Applications/HealthSync.app" Payload/
+          zip -qry HealthSync-unsigned.ipa Payload
+          ls -l HealthSync-unsigned.ipa
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HealthSync-unsigned-ipa
+          path: HealthSync-unsigned.ipa
+
+      - name: Attach .ipa to rolling 'latest' release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release delete latest --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create latest "HealthSync-unsigned.ipa" \
+            --title "Health Sync (unsigned) — ${GITHUB_SHA::7}" \
+            --notes "Unsigned HealthKit spike build of ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}). Sideload via AltStore with a free Apple ID." \
+            --target "$GITHUB_SHA"
