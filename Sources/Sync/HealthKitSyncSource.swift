@@ -26,7 +26,7 @@ final class HealthKitSyncSource: SyncSourceProviding {
     private static let quantitySpecs: [QuantitySpec] = [
         QuantitySpec(wire: "heart_rate", type: HKQuantityType(.heartRate),
                      unit: .count().unitDivided(by: .minute()), scale: 1, unitLabel: "count/min"),
-        QuantitySpec(wire: "hrv_sdms", type: HKQuantityType(.heartRateVariabilitySDNS),
+        QuantitySpec(wire: "hrv_sdms", type: HKQuantityType(.heartRateVariabilitySDNN),
                      unit: .second(), scale: 1000, unitLabel: "ms"),
         QuantitySpec(wire: "resting_heart_rate", type: HKQuantityType(.restingHeartRate),
                      unit: .count().unitDivided(by: .minute()), scale: 1, unitLabel: "count/min"),

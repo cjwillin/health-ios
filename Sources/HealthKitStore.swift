@@ -37,7 +37,7 @@ final class HealthKitStore: ObservableObject {
     static let readTypes: Set<HKSampleType> = [
         HKQuantityType(.stepCount),
         HKQuantityType(.heartRate),
-        HKQuantityType(.heartRateVariabilitySDNS),
+        HKQuantityType(.heartRateVariabilitySDNN),
         HKQuantityType(.restingHeartRate),
         HKQuantityType(.respiratoryRate),
         HKQuantityType(.oxygenSaturation),
