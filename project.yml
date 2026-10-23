@@ -11,6 +11,7 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GENERATE_INFOPLIST_FILE: YES
 targets:
   HealthSync:
     type: application
@@ -30,14 +31,29 @@ targets:
           - UIInterfaceOrientationPortrait
         NSHealthShareUsageDescription: >-
           Health Sync reads your steps, heart rate, sleep and workouts to show
-          your day and sync it. In this spike nothing leaves the device.
+          your day and sync it to your own private ingest server. Health data
+          never goes anywhere else.
         ITSAppUsesNonExemptEncryption: false
     entitlements:
       path: SupportFiles/HealthSync.entitlements
       properties:
         com.apple.developer.healthkit: true
+  HealthSyncTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/HealthSyncTests
+    dependencies:
+      - target: HealthSync
+      - sdk: HealthKit.framework
 schemes:
   HealthSync:
     build:
       targets:
         HealthSync: all
+        HealthSyncTests: [test]
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - HealthSyncTests
