@@ -30,9 +30,9 @@ final class JSONAnchorStore: AnchorStoring {
     func allAnchors() -> [String: Data] {
         queue.sync {
             guard let data = try? Data(contentsOf: fileURL),
-                  let decoded = try? JSONDecoder().decode([String: String].self, from: data) else { return [:] }
+                  let decoded = try? JSONDecoder().decode([String: [String: String]].self, from: data) else { return [:] }
             var result: [String: Data] = [:]
-            for (key, base64) in decoded {
+            for (key, base64) in decoded["anchors"] ?? [:] {
                 if let value = Data(base64Encoded: base64) {
                     result[key] = value
                 }

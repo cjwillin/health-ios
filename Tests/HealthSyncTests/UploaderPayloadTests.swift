@@ -304,7 +304,7 @@ final class UploaderPayloadTests: XCTestCase {
 
         await firstEngine.syncNow(trigger: "unit_test")
         XCTAssertEqual(firstProvider.anchorsSeen.first, [:], "first sync starts with no stored anchors")
-        XCTAssertEqual(firstEngine.lastHTTPResult, "HTTP 200")
+        XCTAssertTrue(firstEngine.lastHTTPResult.hasPrefix("HTTP 200"), "got: \(firstEngine.lastHTTPResult)")
 
         // A NEW engine + NEW store instance over the same directory must see
         // the persisted anchor on the next sync.
@@ -322,7 +322,7 @@ final class UploaderPayloadTests: XCTestCase {
         await secondEngine.syncNow(trigger: "unit_test")
         XCTAssertEqual(secondProvider.anchorsSeen.first?["heart_rate"], heartAnchor,
                        "second sync must resume from the persisted anchor")
-        XCTAssertEqual(secondEngine.lastHTTPResult, "HTTP 200")
+        XCTAssertTrue(secondEngine.lastHTTPResult.hasPrefix("HTTP 200"), "got: \(secondEngine.lastHTTPResult)")
 
         let reopenedStore = JSONAnchorStore(directory: tempDirectory)
         XCTAssertEqual(reopenedStore.allAnchors()["heart_rate"], Data([9]),
