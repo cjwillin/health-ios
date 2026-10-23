@@ -21,7 +21,7 @@ enum SyncKeychain {
 
     static func clear() {
         for account in [baseURLAccount, clientIdAccount, clientSecretAccount] {
-            SecItemDelete(itemQuery(account))
+            SecItemDelete(itemQuery(account) as CFDictionary)
         }
     }
 
