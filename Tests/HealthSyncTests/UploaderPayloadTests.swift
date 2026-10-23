@@ -197,7 +197,7 @@ final class UploaderPayloadTests: XCTestCase {
         let requests = StubURLProtocol.requests()
         XCTAssertEqual(requests.count, 1, "one successful sync posts exactly once")
         guard let request = requests.first else { return }
-        XCTAssertEqual(request.url?.absoluteString, "https://ingest.example.com/ingest/v2")
+        XCTAssertEqual(request.url.absoluteString, "https://ingest.example.com/ingest/v2")
         XCTAssertEqual(request.headers["CF-Access-Client-Id"], testId)
         XCTAssertEqual(request.headers["CF-Access-Client-Secret"], testSecretValue)
         XCTAssertEqual(request.headers["Content-Type"], "application/json")
