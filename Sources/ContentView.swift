@@ -45,10 +45,10 @@ struct ContentView: View {
             .navigationTitle("Health Sync")
         }
         .task { await store.authorizeAndStart() }
-        .refreshable { await store.refreshSteps() }
+        .refreshable { await store.refreshAndSync(trigger: "app_open") }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                Task { await store.refreshSteps() }
+                Task { await store.refreshAndSync(trigger: "app_open") }
             }
         }
     }

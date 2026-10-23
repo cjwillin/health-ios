@@ -15,13 +15,37 @@ final class HealthKitStore: ObservableObject {
     @Published private(set) var stepsFetchedAt: Date?
     @Published private(set) var wakeLog: [String] = []
 
-    private let healthStore = HKHealthStore()
+    private let healthStore: HKHealthStore
+    let uploader: UploaderEngine
     private var observerRegistered = false
     private var sawInitialObserverCall = false
+
+    init() {
+        let healthStore = HKHealthStore()
+        self.healthStore = healthStore
+        let configProvider: () -> SyncConfig? = { SyncKeychain.loadConfig() }
+        let transport = NetworkTransport()
+        uploader = UploaderEngine(
+            provider: HealthKitSyncSource(healthStore: healthStore),
+            transport: transport,
+            anchorStore: JSONAnchorStore(),
+            diag: DiagClient(transport: transport, currentConfig: configProvider),
+            currentConfig: configProvider
+        )
+    }
 
     static let readTypes: Set<HKSampleType> = [
         HKQuantityType(.stepCount),
         HKQuantityType(.heartRate),
+        HKQuantityType(.heartRateVariabilitySDNS),
+        HKQuantityType(.restingHeartRate),
+        HKQuantityType(.respiratoryRate),
+        HKQuantityType(.oxygenSaturation),
+        HKQuantityType(.activeEnergyBurned),
+        HKQuantityType(.basalEnergyBurned),
+        HKQuantityType(.distanceWalkingRunning),
+        HKQuantityType(.timeInDaylight),
+        HKQuantityType(.flightsClimbed),
         HKCategoryType(.sleepAnalysis),
         HKWorkoutType.workoutType(),
     ]
@@ -34,7 +58,7 @@ final class HealthKitStore: ObservableObject {
         }
         do {
             try await healthStore.requestAuthorization(toShare: [], read: Self.readTypes)
-            authorizationStatus = "authorized (read: steps, HR, sleep, workouts)"
+            authorizationStatus = "authorized (read: all v2 sync types)"
             log("HealthKit read authorization granted")
         } catch {
             authorizationStatus = "authorization FAILED: \(error.localizedDescription)"
@@ -43,6 +67,14 @@ final class HealthKitStore: ObservableObject {
         }
         await refreshSteps()
         startObserverAndBackgroundDelivery()
+    }
+
+    /// Refresh today's steps, then run one v2 uploader sync (background wake
+    /// or app open).
+    func refreshAndSync(trigger: String) async {
+        await refreshSteps()
+        await uploader.syncNow(trigger: trigger)
+        log("v2 uploader: \(uploader.lastHTTPResult)")
     }
 
     /// Cumulative step count from start of day to now (Health app semantics).
@@ -107,7 +139,7 @@ final class HealthKitStore: ObservableObject {
                     } else {
                         self.log("BACKGROUND WAKE  \(Self.timestamp())")
                     }
-                    await self.refreshSteps()
+                    await self.refreshAndSync(trigger: initial ? "app_open" : "background_wake")
                     if bgTask != .invalid {
                         UIApplication.shared.endBackgroundTask(bgTask)
                     }
